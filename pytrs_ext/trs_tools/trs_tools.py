@@ -169,9 +169,39 @@ def custom_trs_list(txt, rgx, sec_key, default_ns=None, default_ew=None):
     return trs_list
 
 
+def trs_list_to_format_a(
+        trs_list, sec_delimiter=', ', twprge_delimiter=', ') -> str:
+    """
+    Convert a list of Twp/Rge/Sec's (either strings or pytrs.TRS
+    objects) into a string in the predefined format `FORMAT_A`.
+
+    For example, `['154n97w14', '154n97w01', '155n98w11']` will become
+    `'154n97w - 14, 1, 155n98w - 11'`.
+    """
+    ordered = []
+    twprge_dct = {}
+    for trs in trs_list:
+        if isinstance(trs, str):
+            trs = pytrs.TRS(trs)
+        sec_num = trs.sec_num
+        if sec_num is None:
+            continue
+        twprge = trs.twprge
+        twprge_dct.setdefault(twprge, [])
+        twprge_dct[twprge].append(str(trs.sec_num))
+        if twprge not in ordered:
+            ordered.append(twprge)
+    components = [
+        f"{twprge} - {sec_delimiter.join(twprge_dct[twprge])}"
+        for twprge in ordered
+    ]
+    return twprge_delimiter.join(components)
+
+
 __all__ = [
     custom_trs,
     custom_trs_list,
+    trs_list_to_format_a,
     FORMAT_A,
     FORMAT_B,
     FORMAT_C,

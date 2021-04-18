@@ -8,6 +8,7 @@ Functions for identifying Twp/Rge/Sec using regex patterns for
 from .trs_tools import (
     custom_trs,
     custom_trs_list,
+    trs_list_to_format_a,
     FORMAT_A,
     FORMAT_B,
     FORMAT_C,
