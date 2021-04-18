@@ -1,0 +1,2 @@
+pandas
+git+https://github.com/JamesPImes/pyTRS.git@master
