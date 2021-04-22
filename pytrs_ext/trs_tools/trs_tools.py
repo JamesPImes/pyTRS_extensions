@@ -210,7 +210,7 @@ def trs_list_to_format_a(
     # Rely on built-in OrderedDict to remember insertion order.
     from collections import OrderedDict
     grouped = trs_list.group(by_attribute='twprge', into=OrderedDict())
-    # Map a lambda over the TRSList to extract the section from each TRS.
+    # Map a lambda over each TRSList to extract the section from each TRS.
     components = [
         f"{twprge} - {sec_delimiter.join(map(lambda x: x.sec.lstrip('0'), lst))}"
         for twprge, lst in grouped.items()
