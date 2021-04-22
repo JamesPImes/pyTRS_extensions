@@ -86,6 +86,8 @@ def custom_trs(txt, rgx, default_ns=None, default_ew=None):
     if mo is None:
         return pytrs.TRS(txt)
     groups = mo.groupdict()
+    # We don't pass the groupdict directly as **kwarg in case it
+    # contains other named groups.
     return pytrs.TRS.from_twprgesec(
         twp=groups['twp'],
         rge=groups['rge'],
@@ -157,6 +159,8 @@ def custom_trs_list(txt, rgx, sec_key, default_ns=None, default_ew=None):
     trs_list = pytrs.TRSList()
     for mo in re.finditer(rgx, txt):
         groups = mo.groupdict()
+        # We don't pass the groupdict directly as **kwarg in case it
+        # contains other named groups.
         twp = groups['twp']
         rge = groups['rge']
         sec_list = groups['sec_list']
