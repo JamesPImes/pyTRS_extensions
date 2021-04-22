@@ -134,7 +134,8 @@ def filter_by_trs(
     Alternatively, filter rows to those that do NOT contain the
     specified TRS with `include=False` (set to True by default).
     Optionally pass multiple TRS's to match by passing a tuple of
-    strings as `trs` (only one needs to match to qualify as a hit).
+    strings as `trs` (only one needs to match to qualify as a hit,
+    unless we also pass `match_all=True`, which is `False` by default).
 
     :param df: A pandas DataFrame with a column that contains PLSS land
     descriptions.
