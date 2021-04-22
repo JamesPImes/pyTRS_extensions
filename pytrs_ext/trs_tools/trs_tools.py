@@ -96,14 +96,14 @@ def custom_trs(txt, rgx, default_ns=None, default_ew=None):
 
 def custom_trs_list(txt, rgx, sec_key, default_ns=None, default_ew=None):
     r"""
-    Get a list of `pytrs.TRS` objects from a string (`txt`), using a
-    custom regex pattern `rgx`. The `rgx` pattern should have named
+    Get a `TRSList` of `pytrs.TRS` objects from a string (`txt`), using
+    a custom regex pattern `rgx`. The `rgx` pattern should have named
     groups 'twp', 'rge', and 'sec_list'.  The match values of 'twp' and
     'rge' should be able to be passed to args `twp=` and `rge=` in the
     `pytrs.TRS.from_twprgesec()` method.
 
     However, 'sec_list' should match a string that can be broken down
-    into one or more section numbers.  You must pass `sec_key`, a
+    into one or more section numbers.  You must also pass `sec_key`, a
     function that will apply to the matched 'sec_list' string(s) in
     order to break it down into a list of strings or integers (each of
     which is 1 or 2 digits long).
@@ -151,10 +151,10 @@ def custom_trs_list(txt, rgx, sec_key, default_ns=None, default_ew=None):
 
     :param default_ew: Same purpose as in the pytrs library.
 
-    :return: A list of `pytrs.TRS` objects.
+    :return: A `TRSList` of `pytrs.TRS` objects.
     """
     rgx = re.compile(rgx)
-    trs_list = []
+    trs_list = pytrs.TRSList()
     for mo in re.finditer(rgx, txt):
         groups = mo.groupdict()
         twp = groups['twp']
@@ -170,27 +170,38 @@ def custom_trs_list(txt, rgx, sec_key, default_ns=None, default_ew=None):
 
 
 def trs_list_to_format_a(
-        trs_list, sec_delimiter=', ', twprge_delimiter=', ') -> str:
+        trs_list, sec_delimiter=', ', twprge_delimiter=', ',
+        discard_errors=False) -> str:
     """
     Convert a list of Twp/Rge/Sec's (either strings or pytrs.TRS
     objects) into a string in the predefined format `FORMAT_A`.
 
     For example, `['154n97w14', '154n97w01', '155n98w11']` will become
     `'154n97w - 14, 1, 155n98w - 11'`.
+
+    :param trs_list: A list of Twp/Rge/Sec's, each being a pytrs.TRS
+    object or an equivalent string. (May also be a `TRSList` object.)
+
+    :param sec_delimiter: String to separate sections from one another.
+
+    :param twprge_delimiter: String with which to separate one Twp/Rge
+    and its sections from the next Twp/Rge.
+
+    :param discard_errors: A bool, whether to throw out errors.
+
+    :return: The compiled string.
     """
     ordered = []
-    twprge_dct = {}
+    trs_list = pytrs.TRSList(trs_list)
+    if discard_errors:
+        trs_list.filter_errors(drop=True, undef=True)
     for trs in trs_list:
-        if isinstance(trs, str):
-            trs = pytrs.TRS(trs)
-        sec_num = trs.sec_num
-        if sec_num is None:
-            continue
-        twprge = trs.twprge
-        twprge_dct.setdefault(twprge, [])
-        twprge_dct[twprge].append(str(trs.sec_num))
-        if twprge not in ordered:
-            ordered.append(twprge)
+        if trs.twprge not in ordered:
+            ordered.append(trs.twprge)
+    grouped = trs_list.group(by_attribute='twprge')
+    twprge_dct = {}
+    for twprge, trslist in grouped.items():
+        twprge_dct[twprge] = [trs.sec for trs in trslist]
     components = [
         f"{twprge} - {sec_delimiter.join(twprge_dct[twprge])}"
         for twprge in ordered
