@@ -175,7 +175,7 @@ def custom_trs_list(txt, rgx, sec_key, default_ns=None, default_ew=None):
 
 def trs_list_to_format_a(
         trs_list, sec_delimiter=', ', twprge_delimiter=', ',
-        handle_errors: str=None) -> str:
+        handle_errors: str = None) -> str:
     """
     Convert a list of Twp/Rge/Sec's (either strings or pytrs.TRS
     objects) into a string in the predefined format `FORMAT_A`.
