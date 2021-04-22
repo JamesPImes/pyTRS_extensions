@@ -191,20 +191,18 @@ def trs_list_to_format_a(
 
     :return: The compiled string.
     """
-    ordered = []
     trs_list = pytrs.TRSList(trs_list)
     if discard_errors:
         trs_list.filter_errors(drop=True, undef=True)
-    for trs in trs_list:
-        if trs.twprge not in ordered:
-            ordered.append(trs.twprge)
-    grouped = trs_list.group(by_attribute='twprge')
-    twprge_dct = {}
+    # Rely on built-in OrderedDict to remember insertion order.
+    from collections import OrderedDict
+    grouped = trs_list.group(by_attribute='twprge', into=OrderedDict())
+    twprge_dct = grouped
     for twprge, trslist in grouped.items():
         twprge_dct[twprge] = [trs.sec for trs in trslist]
     components = [
         f"{twprge} - {sec_delimiter.join(twprge_dct[twprge])}"
-        for twprge in ordered
+        for twprge in grouped.keys()
     ]
     return twprge_delimiter.join(components)
 
