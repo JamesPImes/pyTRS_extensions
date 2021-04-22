@@ -3,6 +3,8 @@
 
 Miscellaneous extension functions for the `pyTRS` library that I wrote for my own use that I don't want to maintain as part of the `pyTRS` library itself.
 
+(The API of any of these functions might change without warning; they're mostly tools I need for projects I'm working on at any given time.)
+
 
 [`pytrs_ext.trs_tools`](https://github.com/JamesPImes/pyTRS_extensions/blob/master/info/trs_tools.md) for parsing `pytrs.TRS` objects from text.
 
