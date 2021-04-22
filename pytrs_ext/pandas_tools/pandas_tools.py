@@ -118,10 +118,6 @@ def parse_plssdescs(
             func = join
         ndf[header] = [func(dct[att]) for dct in parsed_tracts]
 
-    # # Merge our original DataFrame to the new one, and return the result
-    # return pd.merge(
-    #     df, ndf, left_index=True, right_on="ind", suffixes=("", suffix))
-
     ndf = ndf.set_index("ind")
 
     # Merge our original DataFrame to the new one, and return the result
@@ -130,7 +126,8 @@ def parse_plssdescs(
 
 
 def filter_by_trs(
-        df: pd.DataFrame, plss_col: str, trs, include=True, config=None) -> pd.DataFrame:
+        df: pd.DataFrame, plss_col: str, trs, include=True, config=None,
+        match_all=False) -> pd.DataFrame:
     """
     Filter a pandas DataFrame containing unparsed PLSS land descriptions
     to those rows that contain the specified Twp/Rge/Sec (TRS).
@@ -141,49 +138,67 @@ def filter_by_trs(
 
     :param df: A pandas DataFrame with a column that contains PLSS land
     descriptions.
+
     :param plss_col: The header of the column containing PLSS land
     descriptions to filter on.
-    :param trs: A string, representing the TRS in question, in the
-    pytrs format (i.e. '000n000w00', or fewer digits for Twp or Rge,
-    if appropriate -- e.g., '154n97w14' or '8s22e01'). May also pass in
-    a list or tuple of multiple TRS's, in which case only one TRS needs
-    to match to qualify as a hit.
+
+    :param trs: The Twp/Rge/Section(s) to look for in this TRSList.
+    May pass as a TRS object, a string in the standard pyTRS format,
+    or a TRSList.  May also pass a Tract, a parsed PLSSDesc object,
+    a TractList.  May also or an iterable containing any combination
+    of those types. (Note: If a `Tract`, `PLSSDesc`, or `TractList`
+    is passed, the `.trs` attribute in each `Tract` will be looked
+    for.)
+
     :param include: Whether to filter to those results that include the
     specified TRS (`True`, the default behavior), or to exclude exclude
     (i.e. `False`).
+
     :param config: (Optional) A pytrs.Config object or config parameters
     (see pytrs.Config docs for details).
+
+    :param match_all: If we need to check whether ALL of the
+    Twp/Rge/Sections are contained in this `TRSList` (ignoring
+    duplicates).  Defaults to False (i.e. a match of ANY Twp/Rge/Sec
+    will be interpreted as True).
+
     :return: A filtered DataFrame.
     """
     if not include:
-        return df[~df[plss_col].apply(plssdesc_contains_trs, args=(trs, config))]
-    return df[df[plss_col].apply(plssdesc_contains_trs, args=(trs, config))]
+        return df[~df[plss_col].apply(plssdesc_contains_trs, args=(trs, config, match_all))]
+    return df[df[plss_col].apply(plssdesc_contains_trs, args=(trs, config, match_all))]
 
 
-def plssdesc_contains_trs(plssdesc_raw: str, trs, config=None) -> bool:
+def plssdesc_contains_trs(plssdesc_raw: str, trs, config=None, match_all=False) -> bool:
     """
     Whether the unparsed PLSS land description contains the specified
     township/range/section (TRS).
 
     :param plssdesc_raw: An unparsed PLSS land description (a string).
-    :param trs: A string, representing the TRS in question, in the
-    pytrs format (i.e. '000n000w00', or fewer digits for Twp or Rge,
-    if appropriate -- e.g., '154n97w14' or '8s22e01'). May also pass in
-    a list or tuple of multiple TRS's, in which case only one TRS needs
-    to match to qualify as a hit.
+
+    :param trs: The Twp/Rge/Section(s) to look for in this TRSList.
+    May pass as a TRS object, a string in the standard pyTRS format,
+    or a TRSList.  May also pass a Tract, a parsed PLSSDesc object,
+    a TractList.  May also or an iterable containing any combination
+    of those types. (Note: If a `Tract`, `PLSSDesc`, or `TractList`
+    is passed, the `.trs` attribute in each `Tract` will be looked
+    for.)
+
     :param config: (Optional) A pytrs.Config object or config parameters
     (see pytrs.Config docs for details).
+
+    :param match_all: If we need to check whether ALL of the
+    Twp/Rge/Sections are contained in this `TRSList` (ignoring
+    duplicates).  Defaults to False (i.e. a match of ANY Twp/Rge/Sec
+    will be interpreted as True).
+
     :return: A bool, whether or not the TRS is found in the PLSS
     description.
     """
-    if isinstance(trs, (pytrs.TRS, str)):
-        # If a single object was passed, put it in a list.
-        trs = [trs]
-    # Use str() to convert any pytrs.TRS objects in the list.
-    sought_trs = set([str(t).lower() for t in trs])
-    dsc = pytrs.PLSSDesc(plssdesc_raw, parse_qq=True, config=config)
-    found_trs = set(dsc.list_trs())
-    return len(sought_trs.intersection(found_trs)) > 0
+    sought_trs = pytrs.TRSList(trs)
+    dsc = pytrs.PLSSDesc(plssdesc_raw, config=config)
+    found_trs = pytrs.TRSList(dsc)
+    return found_trs.contains(sought_trs, match_all=match_all)
 
 
 __all__ = [
