@@ -175,7 +175,7 @@ def custom_trs_list(txt, rgx, sec_key, default_ns=None, default_ew=None):
 
 def trs_list_to_format_a(
         trs_list, sec_delimiter=', ', twprge_delimiter=', ',
-        discard_errors=False) -> str:
+        handle_errors: str=None) -> str:
     """
     Convert a list of Twp/Rge/Sec's (either strings or pytrs.TRS
     objects) into a string in the predefined format `FORMAT_A`.
@@ -191,22 +191,29 @@ def trs_list_to_format_a(
     :param twprge_delimiter: String with which to separate one Twp/Rge
     and its sections from the next Twp/Rge.
 
-    :param discard_errors: A bool, whether to throw out errors.
+    :param handle_errors: (Optional) Either `'drop'` (to get rid of any
+    encountered error / undefined Twp/Rge/Sec) or `'raise'` to raise a
+    `ValueError` if any are encountered.  Defaults to None, in which
+    case they are left alone and included in the returned string.  Any
+    other string will have no effect, and values of any other type will
+    likely raise an unintended error.
 
     :return: The compiled string.
     """
     trs_list = pytrs.TRSList(trs_list)
-    if discard_errors:
-        trs_list.filter_errors(drop=True, undef=True)
+    if handle_errors:
+        handle_errors = handle_errors.lower()
+        found = trs_list.filter_errors(drop=handle_errors == 'drop', undef=True)
+        if found and handle_errors == 'raise':
+            raise ValueError(
+                f"Encountered {len(found)} error/undefined Twp/Rge/Sec.")
     # Rely on built-in OrderedDict to remember insertion order.
     from collections import OrderedDict
     grouped = trs_list.group(by_attribute='twprge', into=OrderedDict())
-    twprge_dct = grouped
-    for twprge, trslist in grouped.items():
-        twprge_dct[twprge] = [trs.sec for trs in trslist]
+    # Map a lambda over the TRSList to extract the section from each TRS.
     components = [
-        f"{twprge} - {sec_delimiter.join(twprge_dct[twprge])}"
-        for twprge in grouped.keys()
+        f"{twprge} - {sec_delimiter.join(map(lambda x: x.sec.lstrip('0'), lst))}"
+        for twprge, lst in grouped.items()
     ]
     return twprge_delimiter.join(components)
 
