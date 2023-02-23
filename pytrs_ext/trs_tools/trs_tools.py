@@ -209,7 +209,7 @@ def trs_list_to_format_a(
                 f"Encountered {len(found)} error/undefined Twp/Rge/Sec.")
     # Rely on built-in OrderedDict to remember insertion order.
     from collections import OrderedDict
-    grouped = trs_list.group(by_attribute='twprge', into=OrderedDict())
+    grouped = trs_list.group_by(attribute='twprge', into=OrderedDict())
     components = [
         f"{twprge} - {sec_delimiter.join([trs.sec.lstrip('0') for trs in lst])}"
         for twprge, lst in grouped.items()
