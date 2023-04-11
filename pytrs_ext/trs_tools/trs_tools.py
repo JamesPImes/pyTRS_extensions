@@ -8,10 +8,19 @@ Functions for identifying Twp/Rge/Sec using regex patterns for
 import re
 import pytrs
 
-# ----------------------------------------------------------------------
-# Some preset formats for the `custom_trs_list()` function.
 
-# For unpacking in the format '154n97w - 1, 14, 15, 36, 155n97w - 23, 1'
+__all__ = [
+    'custom_trs',
+    'custom_trs_list',
+    'trs_list_to_format_a',
+    'FORMAT_A',
+    'FORMAT_B',
+    'FORMAT_C',
+    'FORMAT_EXAMPLES',
+]
+
+# Some preset formats for the `custom_trs_list()` function...
+# For unpacking in the format '154n97w - 1, 14, 15, 36, 155n97w - 23, 1'.
 FORMAT_A = {
     'rgx': re.compile(
         r"(?P<twp>\d{1,3}[NSns])(?P<rge>\d{1,3}[EWew]) - "
@@ -20,7 +29,7 @@ FORMAT_A = {
 }
 
 # For unpacking in the format '154-097-014-001' -- i.e. '154n97w14' and
-# '154n97w01'
+# '154n97w01'.
 FORMAT_B = {
     'rgx': re.compile(
         r"(?P<twp>\d{1,3})-(?P<rge>\d{1,3})-(?P<sec_list>(\d{1,3}-?)+)"),
@@ -51,7 +60,6 @@ FORMAT_EXAMPLES = {
         ['154n97w14']
     )
 }
-# ----------------------------------------------------------------------
 
 
 def custom_trs(txt, rgx, default_ns=None, default_ew=None):
@@ -215,14 +223,3 @@ def trs_list_to_format_a(
         for twprge, lst in grouped.items()
     ]
     return twprge_delimiter.join(components)
-
-
-__all__ = [
-    custom_trs,
-    custom_trs_list,
-    trs_list_to_format_a,
-    FORMAT_A,
-    FORMAT_B,
-    FORMAT_C,
-    FORMAT_EXAMPLES
-]
