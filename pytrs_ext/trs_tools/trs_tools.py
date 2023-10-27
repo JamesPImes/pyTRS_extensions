@@ -223,3 +223,56 @@ def trs_list_to_format_a(
         for twprge, lst in grouped.items()
     ]
     return twprge_delimiter.join(components)
+
+
+def tract_list_to_format_a(
+        tract_list,
+        sec_delimiter=', ',
+        twprge_delimiter=', ',
+        handle_errors: str = None,
+        include_desc=True) -> str:
+    """
+    Convert a list of ``pytrs.Tract`` objects into a string in the
+    predefined format ``FORMAT_A`` (but with optional per-tract
+    descriptions included in parentheses).
+
+    :param tract_list: A list of ``pytrs.Tract`` objects.
+
+    :param sec_delimiter: String to separate sections from one another.
+
+    :param twprge_delimiter: String with which to separate one Twp/Rge
+     and its sections from the next Twp/Rge.
+
+    :param include_desc:
+
+    :param handle_errors: (Optional) Either ``'drop'`` (to get rid of
+     any encountered error / undefined Twp/Rge/Sec) or ``'raise'`` to
+     raise a ``ValueError`` if any are encountered.  Defaults to
+     ``None``, in which case they are left alone and included in the
+     returned string.  Any other string will have no effect, and values
+     of any other type will likely raise an unintended error.
+
+    :return: The compiled string.
+    """
+    tract_list = pytrs.TractList(tract_list)
+    if handle_errors:
+        handle_errors = handle_errors.lower()
+        found = tract_list.filter_errors(drop=handle_errors == 'drop', undef=True)
+        if found and handle_errors == 'raise':
+            raise ValueError(
+                f"Encountered {len(found)} error/undefined Twp/Rge/Sec.")
+    # Rely on built-in OrderedDict to remember insertion order.
+    from collections import OrderedDict
+    grouped = tract_list.group_by(attribute='twprge', into=OrderedDict())
+    components = []
+    for twprge, tlist in grouped.items():
+        sec_components = []
+        tlist.custom_sort()
+        for tract in tlist:
+            sec_portion = f"{tract.sec.lstrip('0')}"
+            if include_desc:
+                sec_portion = f"{sec_portion} ({tract.desc})"
+            sec_components.append(sec_portion)
+        new_component = f"{twprge} - {sec_delimiter.join(sec_components)}"
+        components.append(new_component)
+    return twprge_delimiter.join(components)
